@@ -1,13 +1,13 @@
 package main
 
 import (
-    "fmt"
-    "log"
-    "net/http"
-    "os"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
 
-    "github.com/line/line-bot-sdk-go/linebot"
-    "github.com/line/line-bot-sdk-go/linebot/httphandler"
+	"github.com/line/line-bot-sdk-go/linebot"
+	"github.com/line/line-bot-sdk-go/linebot/httphandler"
 )
 
 func main() {
@@ -23,9 +23,9 @@ func main() {
 
 	// ポート番号 環境変数がセットされていない場合は8080
 	port := os.Getenv("PORT")
-	if port = "" {
+	if port == "" {
 		port = "8080"
-		log.Printf("ポート番号にデフォルト値 8080 をセットします.", port)
+		log.Printf("ポート番号にデフォルト値 %s をセットします.", port)
 	}
 
 	// リクエストを受け取った時に実行する関数を定義し、ハンドラに登録
