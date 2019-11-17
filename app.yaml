@@ -1,0 +1,12 @@
+runtime: go111
+
+# チャネルシークレットとチャネルアクセストークンの環境変数
+includes:
+- secret.yaml
+
+# use https
+handlers:
+- url: /.*
+  script: auto
+  secure: always
+  redirect_http_response_code: 301
