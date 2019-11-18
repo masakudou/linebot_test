@@ -1,15 +1,49 @@
 package main
 
 import (
-	"./scraping"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 
+	"github.com/PuerkitoBio/goquery"
 	"github.com/line/line-bot-sdk-go/linebot"
 	"github.com/line/line-bot-sdk-go/linebot/httphandler"
 )
+
+// ScrapingTrainInfo Yahoo!路線情報の各路線のページへアクセスし、運行情報のテキストをスクレイピングして返す.
+func ScrapingTrainInfo(url string) string {
+	const errorMessage = "大変申し訳ございません。エラーが発生しました。時間をおいて試してみて下さい。"
+
+	response, err := http.Get(url)
+	if err != nil {
+		log.Print(err)
+		return errorMessage
+	}
+
+	// HTTP Response Bodyをクローズ
+	defer response.Body.Close()
+
+	if response.StatusCode != 200 {
+		log.Printf("status code error: %d %s", response.StatusCode, response.Status)
+		return errorMessage
+	}
+
+	// HTMLドキュメントの取得
+	document, err := goquery.NewDocumentFromReader(response.Body)
+	if err != nil {
+		log.Print(err)
+		return errorMessage
+	}
+
+	// セレクタの取得
+	selection := document.Find("div#mdServiceStatus")
+	innerSelection := selection.Find("p")
+
+	trainInfoText := innerSelection.Text()
+
+	return trainInfoText
+}
 
 func main() {
 	// LINE bot SDKに含まれるhttpHandlerの初期化
@@ -48,7 +82,7 @@ func main() {
 				switch message.Text {
 				case "運行情報":
 					// 京成本線の運行情報をスクレイピング
-					trainInfoText := scraping.ScrapingTrainInfo("https://transit.yahoo.co.jp/traininfo/detail/96/0/")
+					trainInfoText := ScrapingTrainInfo("https://transit.yahoo.co.jp/traininfo/detail/96/0/")
 					// trainInfoTextの内容を送信
 					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(trainInfoText)).Do(); err != nil {
 						log.Print(err)
