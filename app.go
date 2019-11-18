@@ -80,9 +80,25 @@ func main() {
 			switch message := event.Message.(type) {
 			case *linebot.TextMessage:
 				switch message.Text {
-				case "運行情報":
+				case "京成本線":
 					// 京成本線の運行情報をスクレイピング
 					trainInfoText := ScrapingTrainInfo("https://transit.yahoo.co.jp/traininfo/detail/96/0/")
+					// trainInfoTextの内容を送信
+					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(trainInfoText)).Do(); err != nil {
+						log.Print(err)
+					}
+				case "都営浅草線":
+					// 都営浅草線の運行情報をスクレイピング
+					trainInfoText := ScrapingTrainInfo("https://transit.yahoo.co.jp/traininfo/detail/128/0/")
+					// trainInfoTextの内容を送信
+					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(trainInfoText)).Do(); err != nil {
+						log.Print(err)
+					}
+				case "PSY":
+					trainInfoText := `
+					オッパン カンナムスタイル
+					Eh sexy lady
+					오-오-오-오 오빤 강남스타일`
 					// trainInfoTextの内容を送信
 					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(trainInfoText)).Do(); err != nil {
 						log.Print(err)
