@@ -1,6 +1,7 @@
 package main
 
 import (
+	"./scraping"
 	"fmt"
 	"log"
 	"net/http"
@@ -42,13 +43,16 @@ func main() {
 				return
 			}
 
-			switch message := event.Message.(type).Text {
-			case "運行情報":
-				// replyText: message.Text(ユーザーが投稿したメッセージ)を代入する
-				replyText := message.Text
-				// replyTextの内容を送信
-				if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(replyText)).Do(); err != nil {
-					log.Print(err)
+			switch message := event.Message.(type) {
+			case *linebot.TextMessage:
+				switch message.Text {
+				case "運行情報":
+					// 京成本線の運行情報をスクレイピング
+					trainInfoText := scraping.ScrapingTrainInfo("https://transit.yahoo.co.jp/traininfo/detail/96/0/")
+					// trainInfoTextの内容を送信
+					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(trainInfoText)).Do(); err != nil {
+						log.Print(err)
+					}
 				}
 			}
 		}
