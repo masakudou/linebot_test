@@ -42,8 +42,8 @@ func main() {
 				return
 			}
 
-			switch message := event.Message.(type) {
-			case *linebot.TextMessage:
+			switch message := event.Message.(type).Text {
+			case "運行情報":
 				// replyText: message.Text(ユーザーが投稿したメッセージ)を代入する
 				replyText := message.Text
 				// replyTextの内容を送信
