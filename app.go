@@ -89,6 +89,47 @@ func ShapedTrainInfo(url string) string {
 	return outgoingMessage
 }
 
+// ShapedWeatherInfo 千葉県の天気予報を教えるLINEメッセージを形成し出力
+func ShapedWeatherInfo(url string) string {
+	response, err := http.Get(url)
+	if err != nil {
+		log.Print(err)
+		return errorMessage
+	}
+
+	// HTTP Response Bodyをクローズ
+	defer response.Body.Close()
+
+	if response.StatusCode != 200 {
+		log.Printf("status code error: %d %s", response.StatusCode, response.Status)
+		return errorMessage
+	}
+
+	// HTMLドキュメントの取得
+	document, err := goquery.NewDocumentFromReader(response.Body)
+	if err != nil {
+		log.Print(err)
+		return errorMessage
+	}
+
+	// セレクタの取得
+	forecastSelector := document.Find("div.forecastCity")
+	dateText := forecastSelector.Find("p.date").First().Text()
+	weatherText := forecastSelector.Find("p.pict").First().Text()
+	temperatureSelector := forecastSelector.Find("ul.temp").First()
+	highTemperature := temperatureSelector.Find("li.high > em").Text()
+	lowTemperature  := temperatureSelector.Find("li.low > em").Text()
+
+	// 送信するメッセージを形成
+	outgoingMessage := 
+		"【" + dateText + " の天気】\n" +
+		"予報: " + weatherText + "\n" +
+		"最高気温: " + highTemperature + "度\n" +
+		"最低気温: " + lowTemperature + "度"
+
+	return outgoingMessage
+}
+
 func main() {
 	// LINE bot SDKに含まれるhttpHandlerの初期化
 	handler, err := httphandler.New(
@@ -131,19 +172,24 @@ func main() {
 						log.Print(err)
 					}
 				case "天気":
-					// 都営浅草線の運行情報をスクレイピング
-					trainInfoText := ScrapingTrainInfo("https://transit.yahoo.co.jp/traininfo/detail/128/0/")
-					// trainInfoTextの内容を送信
-					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(trainInfoText)).Do(); err != nil {
+					// 千葉県の天気情報をスクレイピングし、テキストメッセージを送信
+					outgoingMessage := ShapedWeatherInfo("https://weather.yahoo.co.jp/weather/jp/12/4510.html")
+					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(outgoingMessage)).Do(); err != nil {
+						log.Print(err)
+					}
+				case "おはよう":
+					// 運行情報と天気を両方表示する。
+					outgoingMessage := ShapedTrainInfo("https://transit.yahoo.co.jp/traininfo/area/4/")
+					outgoingMessage += ShapedWeatherInfo("https://weather.yahoo.co.jp/weather/jp/12/4510.html")
+					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(outgoingMessage)).Do(); err != nil {
 						log.Print(err)
 					}
 				case "PSY":
-					trainInfoText := 
+					outgoingMessage := 
 					"オッパン カンナムスタイル\n" +
 					"Eh sexy lady\n" +
 					"오-오-오-오 오빤 강남스타일"
-					// trainInfoTextの内容を送信
-					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(trainInfoText)).Do(); err != nil {
+					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(outgoingMessage)).Do(); err != nil {
 						log.Print(err)
 					}
 				}
