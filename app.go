@@ -11,10 +11,10 @@ import (
 	"github.com/line/line-bot-sdk-go/linebot/httphandler"
 )
 
+const errorMessage = "大変申し訳ございません。エラーが発生しました。時間をおいて試してみて下さい。"
+
 // ScrapingTrainInfo Yahoo!路線情報の各路線のページへアクセスし、運行情報のテキストをスクレイピングして返す.
 func ScrapingTrainInfo(url string) string {
-	const errorMessage = "大変申し訳ございません。エラーが発生しました。時間をおいて試してみて下さい。"
-
 	response, err := http.Get(url)
 	if err != nil {
 		log.Print(err)
@@ -43,6 +43,53 @@ func ScrapingTrainInfo(url string) string {
 	trainInfoText := innerSelection.Text()
 
 	return trainInfoText
+}
+
+// ShapedTrainInfo Yahoo!路線情報のページをスクレイピングして、運行情報を教えるLINEメッセージを形成し出力
+func ShapedTrainInfo(url string)
+{
+	response, err := http.Get()
+	if err != nil {
+		log.Print(err)
+		return errorMessage
+	}
+
+	// HTTP Response Bodyをクローズ
+	defer response.Body.Close()
+
+	if response.StatusCode != 200 {
+		log.Printf("status code error: %d %s", response.StatusCode, response.Status)
+		return errorMessage
+	}
+
+	// HTMLドキュメントの取得
+	document, err := goquery.NewDocumentFromReader(response.Body)
+	if err != nil {
+		log.Print(err)
+		return errorMessage
+	}
+
+	// セレクタの取得
+	titleSelector := document.Find("div.labelLarge")
+	areaText := titleSelector.Find("h1.title").Text()
+	timeText := titleSelector.Find("span.subText").Text()
+
+	// 京成本線、都営浅草線の運行情報を取得
+	keiseiMainLineInfo := ScrapingTrainInfo("https://transit.yahoo.co.jp/traininfo/detail/96/0/")
+	asakusaLineInfo := ScrapingTrainInfo("https://transit.yahoo.co.jp/traininfo/detail/128/0/")
+	
+	// 送信するメッセージを形成
+	outgoingMessage := 
+		"【" + areaText + "】\n" +
+		timeText + "\n"
+		"・京成本線\n" +
+		keiseiMainLineInfo + "\n"
+		"・都営浅草線\n" +
+		asakusaLineInfo
+
+	if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(outgoingMessage)).Do(); err != nil {
+		log.Print(err)
+	}
 }
 
 func main() {
@@ -80,14 +127,10 @@ func main() {
 			switch message := event.Message.(type) {
 			case *linebot.TextMessage:
 				switch message.Text {
-				case "京成本線":
-					// 京成本線の運行情報をスクレイピング
-					trainInfoText := ScrapingTrainInfo("https://transit.yahoo.co.jp/traininfo/detail/96/0/")
-					// trainInfoTextの内容を送信
-					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(trainInfoText)).Do(); err != nil {
-						log.Print(err)
-					}
-				case "都営浅草線":
+				case "運行情報":
+					// 運行情報をスクレイピングし、テキストメッセージを送信
+					ShapedTrainInfo("https://transit.yahoo.co.jp/traininfo/area/4/")
+				case "天気":
 					// 都営浅草線の運行情報をスクレイピング
 					trainInfoText := ScrapingTrainInfo("https://transit.yahoo.co.jp/traininfo/detail/128/0/")
 					// trainInfoTextの内容を送信
@@ -95,10 +138,10 @@ func main() {
 						log.Print(err)
 					}
 				case "PSY":
-					trainInfoText := `
-					オッパン カンナムスタイル
-					Eh sexy lady
-					오-오-오-오 오빤 강남스타일`
+					trainInfoText := 
+					"オッパン カンナムスタイル\n" +
+					"Eh sexy lady\n" +
+					"오-오-오-오 오빤 강남스타일"
 					// trainInfoTextの内容を送信
 					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(trainInfoText)).Do(); err != nil {
 						log.Print(err)
