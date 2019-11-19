@@ -177,18 +177,20 @@ func main() {
 					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(outgoingMessage)).Do(); err != nil {
 						log.Print(err)
 					}
-				case "おはよう":
-					// 運行情報と天気を両方表示する。
-					outgoingMessage := ShapedTrainInfo("https://transit.yahoo.co.jp/traininfo/area/4/")
-					outgoingMessage += ShapedWeatherInfo("https://weather.yahoo.co.jp/weather/jp/12/4510.html")
-					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(outgoingMessage)).Do(); err != nil {
-						log.Print(err)
-					}
 				case "PSY":
 					outgoingMessage := 
 					"オッパン カンナムスタイル\n" +
 					"Eh sexy lady\n" +
 					"오-오-오-오 오빤 강남스타일"
+					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(outgoingMessage)).Do(); err != nil {
+						log.Print(err)
+					}
+				default:
+					outgoingMessage := "おはようございます。\n"
+					// 運行情報と天気を両方表示する。
+					outgoingMessage += ShapedTrainInfo("https://transit.yahoo.co.jp/traininfo/area/4/")
+					outgoingMessage += "\n"
+					outgoingMessage += ShapedWeatherInfo("https://weather.yahoo.co.jp/weather/jp/12/4510.html")
 					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(outgoingMessage)).Do(); err != nil {
 						log.Print(err)
 					}
