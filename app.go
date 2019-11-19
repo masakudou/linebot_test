@@ -46,9 +46,8 @@ func ScrapingTrainInfo(url string) string {
 }
 
 // ShapedTrainInfo Yahoo!路線情報のページをスクレイピングして、運行情報を教えるLINEメッセージを形成し出力
-func ShapedTrainInfo(url string)
-{
-	response, err := http.Get()
+func ShapedTrainInfo(url string) string {
+	response, err := http.Get(url)
 	if err != nil {
 		log.Print(err)
 		return errorMessage
@@ -81,15 +80,13 @@ func ShapedTrainInfo(url string)
 	// 送信するメッセージを形成
 	outgoingMessage := 
 		"【" + areaText + "】\n" +
-		timeText + "\n"
+		timeText + "\n" +
 		"・京成本線\n" +
-		keiseiMainLineInfo + "\n"
+		keiseiMainLineInfo + "\n" +
 		"・都営浅草線\n" +
 		asakusaLineInfo
 
-	if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(outgoingMessage)).Do(); err != nil {
-		log.Print(err)
-	}
+	return outgoingMessage
 }
 
 func main() {
@@ -129,7 +126,10 @@ func main() {
 				switch message.Text {
 				case "運行情報":
 					// 運行情報をスクレイピングし、テキストメッセージを送信
-					ShapedTrainInfo("https://transit.yahoo.co.jp/traininfo/area/4/")
+					outgoingMessage := ShapedTrainInfo("https://transit.yahoo.co.jp/traininfo/area/4/")
+					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(outgoingMessage)).Do(); err != nil {
+						log.Print(err)
+					}
 				case "天気":
 					// 都営浅草線の運行情報をスクレイピング
 					trainInfoText := ScrapingTrainInfo("https://transit.yahoo.co.jp/traininfo/detail/128/0/")
