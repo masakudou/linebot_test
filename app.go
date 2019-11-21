@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/line/line-bot-sdk-go/linebot"
@@ -76,15 +77,15 @@ func ShapedTrainInfo(url string) string {
 	// 京成本線、都営浅草線の運行情報を取得
 	keiseiMainLineInfo := ScrapingTrainInfo("https://transit.yahoo.co.jp/traininfo/detail/96/0/")
 	asakusaLineInfo := ScrapingTrainInfo("https://transit.yahoo.co.jp/traininfo/detail/128/0/")
-	
+
 	// 送信するメッセージを形成
-	outgoingMessage := 
+	outgoingMessage :=
 		"【" + areaText + "】\n" +
-		timeText + "\n" +
-		"・京成本線\n" +
-		keiseiMainLineInfo + "\n" +
-		"・都営浅草線\n" +
-		asakusaLineInfo
+			timeText + "\n" +
+			"・京成本線\n" +
+			keiseiMainLineInfo + "\n" +
+			"・都営浅草線\n" +
+			asakusaLineInfo
 
 	return outgoingMessage
 }
@@ -118,17 +119,27 @@ func ShapedWeatherInfo(url string) string {
 	weatherText := forecastSelector.Find("p.pict").First().Text()
 	temperatureSelector := forecastSelector.Find("ul.temp").First()
 	highTemperature := temperatureSelector.Find("li.high > em").Text()
-	lowTemperature  := temperatureSelector.Find("li.low > em").Text()
+	lowTemperature := temperatureSelector.Find("li.low > em").Text()
 
 	// 送信するメッセージを形成
-	outgoingMessage := 
+	outgoingMessage :=
 		"【" + dateText + " の天気】\n" +
-		"予報: " + weatherText + "\n" +
-		"最高気温: " + highTemperature + "度\n" +
-		"最低気温: " + lowTemperature + "度"
+			"予報: " + weatherText + "\n" +
+			"最高気温: " + highTemperature + "度\n" +
+			"最低気温: " + lowTemperature + "度"
 
 	return outgoingMessage
 }
+
+// GetJstTime time.Time型の変数tを日本時間に変換して返します
+func GetJstTime(t time.Time) time.Time {
+	// convert to UTC time
+	tUTC := t.UTC()
+
+	// get Jst timeZone
+	jstTimezone := time.FixedZone("Asia/Tokyo", 9*60*60)
+	return tUTC.In(jstTimezone)
+} 
 
 func main() {
 	// LINE bot SDKに含まれるhttpHandlerの初期化
@@ -178,15 +189,28 @@ func main() {
 						log.Print(err)
 					}
 				case "PSY":
-					outgoingMessage := 
-					"オッパン カンナムスタイル\n" +
-					"Eh sexy lady\n" +
-					"오-오-오-오 오빤 강남스타일"
+					outgoingMessage :=
+						"オッパン カンナムスタイル\n" +
+							"Eh sexy lady\n" +
+							"오-오-오-오 오빤 강남스타일"
 					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(outgoingMessage)).Do(); err != nil {
 						log.Print(err)
 					}
 				default:
-					outgoingMessage := "おはようございます。\n"
+					outgoingMessage := ""
+					// 日本時間の現在時刻を取得
+					jstNowTime := GetJstTime(time.Now())
+					// .Hour()で分岐
+					switch {
+					case jstNowTime.Hour() >= 5 && jstNowTime.Hour() < 12:
+						outgoingMessage += "おはようございます。\n"
+					case jstNowTime.Hour() >= 12 && jstNowTime.Hour() < 18:
+						outgoingMessage += "こんにちは。\n"
+					case jstNowTime.Hour() >= 18 && jstNowTime.Hour() < 24:
+						outgoingMessage += "こんばんは。\n"
+					default:
+						outgoingMessage += "zzz...\n"
+					}
 					// 運行情報と天気を両方表示する。
 					outgoingMessage += ShapedTrainInfo("https://transit.yahoo.co.jp/traininfo/area/4/")
 					outgoingMessage += "\n"
