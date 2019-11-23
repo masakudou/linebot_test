@@ -90,6 +90,61 @@ func ShapedTrainInfo(url string) string {
 	return outgoingMessage
 }
 
+// ConvertToWeatherEmoji 天気文字列から絵文字文字列を作成
+func ConvertToWeatherEmoji(weatherText string) string {
+	emojis := ""
+	// runeに変換する
+	runed := []rune(weatherText)
+
+	// 1文字目: ベースの天気
+	switch ( string(runed[0]) ) {
+	case "晴":
+		emojis += "☀️"
+	case "曇":
+		emojis += "☁️"
+	case "雨":
+		emojis += "☂️"
+	case "雪":
+		emojis += "⛄️"
+	// イレギュラーな天気は未実装で
+	default:
+		return "❓"
+	}
+
+	// サブ天気がなければ終了
+	if len(runed) < 2 { return emojis }
+
+	// 2-3文字目: サブ天気の頻度 ex. のち 時々 一時
+	switch ( string(runed[1:3]) ) {
+	case "のち":
+		emojis += "=>"
+	case "時々":
+		emojis += "/"
+	case "一時":
+		emojis += ":"
+	// イレギュラーなパターンは未実装で
+	default:
+		emojis += "-"
+	}
+
+	// 4文字目: サブ天気
+	switch ( string(runed[3]) ) {
+	case "晴":
+		emojis += "☀️"
+	case "曇":
+		emojis += "☁️"
+	case "雨":
+		emojis += "☂️"
+	case "雪":
+		emojis += "⛄️"
+	// イレギュラーな天気は未実装で
+	default:
+		return "❓"
+	}
+
+	return emojis
+}
+
 // ShapedWeatherInfo 千葉県の天気予報を教えるLINEメッセージを形成し出力
 func ShapedWeatherInfo(url string) string {
 	response, err := http.Get(url)
@@ -124,7 +179,7 @@ func ShapedWeatherInfo(url string) string {
 	// 送信するメッセージを形成
 	outgoingMessage :=
 		"【" + dateText + " の天気】\n" +
-			"予報: " + weatherText + "\n" +
+			"予報: " + weatherText + " " + ConvertToWeatherEmoji(weatherText) + "\n" +
 			"最高気温: " + highTemperature + "度\n" +
 			"最低気温: " + lowTemperature + "度"
 
@@ -191,8 +246,8 @@ func main() {
 				case "PSY":
 					outgoingMessage :=
 						"オッパン カンナムスタイル\n" +
-							"Eh sexy lady\n" +
-							"오-오-오-오 오빤 강남스타일"
+						"Eh sexy lady\n" +
+						"오-오-오-오 오빤 강남스타일"
 					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(outgoingMessage)).Do(); err != nil {
 						log.Print(err)
 					}
