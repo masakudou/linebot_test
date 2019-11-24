@@ -264,7 +264,7 @@ func main() {
 					case jstNowTime.Hour() >= 18 && jstNowTime.Hour() < 24:
 						outgoingMessage += "こんばんは。\n"
 					default:
-						outgoingMessage += "zzz...\n"
+						outgoingMessage += "😪💤\n"
 					}
 					// 運行情報と天気を両方表示する。
 					outgoingMessage += ShapedTrainInfo("https://transit.yahoo.co.jp/traininfo/area/4/")
