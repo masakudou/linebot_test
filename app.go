@@ -168,21 +168,27 @@ func ShapedWeatherInfo(url string) string {
 		return errorMessage
 	}
 
-	// セレクタの取得
+	outgoingMessage := ""
+
 	forecastSelector := document.Find("div.forecastCity")
-	dateText := forecastSelector.Find("p.date").First().Text()
-	weatherText := forecastSelector.Find("p.pict").First().Text()
-	temperatureSelector := forecastSelector.Find("ul.temp").First()
-	highTemperature := temperatureSelector.Find("li.high > em").Text()
-	lowTemperature := temperatureSelector.Find("li.low > em").Text()
+	// innerForecastSelector ∋ 今日と明日の天気情報が記述されたdiv要素
+	innerForecastSelector := forecastSelector.Find("div")
+	// 今日と明日分の天気情報をスクレイピング
+	innerForecastSelector.Each(func(index int, s *goquery.Selection) {
+		date 			:= s.Find("p.date").First().Text()
+		weather 		:= s.Find("p.pict").First().Text()
+		tempSelector 	:= s.Find("ul.temp").First()
+		high 			:= tempSelector.Find("li.high > em").Text()
+		low 			:= tempSelector.Find("li.low > em").Text()
 
-	// 送信するメッセージを形成
-	outgoingMessage :=
-		"【" + dateText + " の天気】\n" +
-			"予報: " + weatherText + " " + ConvertToWeatherEmoji(weatherText) + "\n" +
-			"最高気温: " + highTemperature + "度\n" +
-			"最低気温: " + lowTemperature + "度"
-
+		outgoingMessage +=
+		"【" + date + " の天気】\n" +
+		"予報: " + weather + " " + ConvertToWeatherEmoji(weather) + "\n" +
+		"最高気温: " + high + "度\n" +
+		"最低気温: " + low + "度" +
+		"\n"
+	})
+	
 	return outgoingMessage
 }
 
@@ -268,7 +274,7 @@ func main() {
 					}
 					// 運行情報と天気を両方表示する。
 					outgoingMessage += ShapedTrainInfo("https://transit.yahoo.co.jp/traininfo/area/4/")
-					outgoingMessage += "\n"
+					outgoingMessage += "\n\n"
 					outgoingMessage += ShapedWeatherInfo("https://weather.yahoo.co.jp/weather/jp/12/4510.html")
 					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(outgoingMessage)).Do(); err != nil {
 						log.Print(err)
