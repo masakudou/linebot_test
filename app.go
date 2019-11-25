@@ -112,7 +112,7 @@ func ConvertToWeatherEmoji(weatherText string) string {
 	}
 
 	// サブ天気がなければ終了
-	if len(runed) < 2 { return emojis }
+	if len(runed) < 4 { return emojis }
 
 	// 2-3文字目: サブ天気の頻度 ex. のち 時々 一時
 	switch ( string(runed[1:3]) ) {
@@ -173,7 +173,7 @@ func ShapedWeatherInfo(url string) string {
 	forecastSelector := document.Find("div.forecastCity")
 	// innerForecastSelector ∋ 今日と明日の天気情報が記述されたdiv要素
 	innerForecastSelector := forecastSelector.Find("div")
-	// 今日と明日分の天気情報をスクレイピング
+	// 今日と明日分の天気情報をスクレイピングして、メッセージ化
 	innerForecastSelector.Each(func(index int, s *goquery.Selection) {
 		date 			:= s.Find("p.date").First().Text()
 		weather 		:= s.Find("p.pict").First().Text()
